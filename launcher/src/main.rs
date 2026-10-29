@@ -2493,14 +2493,25 @@ impl Launcher {
                         cx.notify();
                     })),
                 ),
-            Some(false) => div().child(
-                button("prepare-sign-in", "Sign in", Kind::Secondary, &t).on_click(cx.listener(
-                    |this, _: &ClickEvent, _, cx| {
-                        this.sign_in_to_play();
-                        cx.notify();
-                    },
-                )),
-            ),
+            Some(false) => div()
+                .flex()
+                .gap(px(8.))
+                .child(
+                    button("prepare-install", "From my install", Kind::Ghost, &t).on_click(
+                        cx.listener(|this, _: &ClickEvent, _, cx| {
+                            this.prepare(backend::MinecraftFrom::Install);
+                            cx.notify();
+                        }),
+                    ),
+                )
+                .child(
+                    button("prepare-sign-in", "Sign in", Kind::Secondary, &t).on_click(
+                        cx.listener(|this, _: &ClickEvent, _, cx| {
+                            this.sign_in_to_play();
+                            cx.notify();
+                        }),
+                    ),
+                ),
             None => div().child(prepare),
         };
         let owner = self.owner == Some(true);
