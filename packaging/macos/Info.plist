@@ -31,5 +31,10 @@
 	<true/>
 	<key>NSHumanReadableCopyright</key>
 	<string>Horizon is MIT licensed. Not an official Minecraft product; not approved by or associated with Mojang or Microsoft.</string>
+	<key>LSEnvironment</key>
+	<dict>
+		<key>HORIZON_LAUNCHER_NO_SELF_UPDATE</key>
+		<string>1</string>
+	</dict>
 </dict>
 </plist>

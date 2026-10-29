@@ -23,6 +23,16 @@ pub const LAUNCHER_TAG_PREFIX: &str = "launcher@";
 /// The launcher tags from before 0.2 (`launcher-v0.16.0`).
 pub const OLD_LAUNCHER_TAG_PREFIX: &str = "launcher-v";
 
+/// The version the window shows: a build outside the release pipeline (no `HORIZON_LAUNCHER_TAG`
+/// at build time, such as a local `cargo build` or a package made by hand) says "Custom" beside it.
+pub fn shown_version() -> String {
+    if option_env!("HORIZON_LAUNCHER_TAG").is_some_and(|t| !t.is_empty()) {
+        VERSION.to_string()
+    } else {
+        format!("{VERSION} · Custom")
+    }
+}
+
 const fn version_or(injected: Option<&'static str>) -> &'static str {
     match injected {
         Some(v) if !v.is_empty() => v,
@@ -2175,7 +2185,7 @@ pub fn need_prepared(tag: &str) -> Result<(), String> {
 /// the gate, a sign-in that can't be renewed (no network, expired) still lets the game start,
 /// offline.
 pub fn client(tag: &str) -> Result<Command, String> {
-    let (session, offline) = account::session_for_game(&game_home(), false)
+    let (session, offline) = account::session_for_game(&game_home())
         .map_err(|refused| format!("{refused} Sign in with `horizon-launcher account sign-in`."))?;
     need_prepared(tag)?;
     complete_assets(tag);

@@ -690,7 +690,6 @@ impl Launcher {
                         Err(e) => {
                             if e == account::NoOwner.to_string() {
                                 self.owner = Some(false);
-                                self.owner_screen_open = true;
                             }
                             self.client_error = Some(e);
                         }
@@ -703,7 +702,6 @@ impl Launcher {
                             Ok(pass) => pass,
                             Err(account::NoOwner) => {
                                 self.owner = Some(false);
-                                self.owner_screen_open = true;
                                 self.client_error = Some(format!("{}.", tr(account::NEEDS_OWNER)));
                                 self.starting_pack = None;
                                 self.joining = None;
@@ -983,10 +981,6 @@ impl Launcher {
                     self.owner = Some(true);
                     self.owner_screen_open = false;
                     self.client_error = None;
-                    if !self.settings.owner_notice_seen {
-                        self.settings.owner_notice_seen = true;
-                        self.settings.save();
-                    }
                 }
                 self.sign_in_state = Some(state);
                 changed = true;
@@ -1203,10 +1197,9 @@ impl Launcher {
         self.starting_client = Some(tag.clone());
         self.play_pressed = Some(Instant::now());
         let tx = self.tx.clone();
-        let offline_without_owner = self.settings.dev_offline;
         std::thread::spawn(move || {
             backend::complete_assets(&tag);
-            let session = account::session_for_game(&backend::game_home(), offline_without_owner);
+            let session = account::session_for_game(&backend::game_home());
             let _ = tx.send(Msg::Session(session));
         });
     }
@@ -2174,7 +2167,7 @@ impl Launcher {
             ));
         }
         foot = foot.child(
-            caps(format!("Launcher {}", backend::VERSION))
+            caps(format!("Launcher {}", backend::shown_version()))
                 .id("launcher-version")
                 .px(px(8.))
                 .pt(px(6.))
@@ -3066,7 +3059,7 @@ impl Launcher {
                     "downloading {version}, {percent}%",
                     &[("version", v), ("percent", &done)],
                 );
-                format!("{}  ·  {said}", backend::VERSION)
+                format!("{}  ·  {said}", backend::shown_version())
             }
             SelfUpdate::Ready(v) => trf(
                 "Updated to {version}. Restart the launcher to use it.",
@@ -3074,13 +3067,13 @@ impl Launcher {
             ),
             SelfUpdate::Failed(e) => format!(
                 "{}  ·  {}",
-                backend::VERSION,
+                backend::shown_version(),
                 trf("the update failed: {error}", &[("error", e)])
             ),
             SelfUpdate::Idle => match &self.updates.launcher {
                 Some(r) => format!(
                     "{}  ·  {}",
-                    backend::VERSION,
+                    backend::shown_version(),
                     trf(
                         "{version} available",
                         &[(
@@ -3090,9 +3083,9 @@ impl Launcher {
                     )
                 ),
                 None if self.checked.is_some() && self.update_error.is_none() => {
-                    format!("{}  ·  {}", backend::VERSION, tr("up to date"))
+                    format!("{}  ·  {}", backend::shown_version(), tr("up to date"))
                 }
-                None => backend::VERSION.to_string(),
+                None => backend::shown_version(),
             },
         };
         let launcher_action = match &self.self_update {
