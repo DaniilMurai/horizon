@@ -125,8 +125,9 @@ jobs:
       HORIZON_CURSEFORGE_API_KEY: ${{ secrets.HORIZON_CURSEFORGE_API_KEY }}
       # The release's version and tag, built in (launcher/src/backend.rs VERSION and own_tag: the tag says which
       # line it is on, docs/versioning.md); a launcher branch's build keeps Cargo.toml's.
-      HORIZON_LAUNCHER_VERSION: ${{ (github.event_name != 'push' || github.ref == 'refs/heads/main') && needs.decide.outputs.version || '' }}
-      HORIZON_LAUNCHER_TAG: ${{ (github.event_name != 'push' || github.ref == 'refs/heads/main') && needs.decide.outputs.tag || '' }}
+      # A custom build: the version it is based on, and no release tag, so it says "Custom" and never replaces itself.
+      HORIZON_LAUNCHER_VERSION: '0.2.28'
+      HORIZON_LAUNCHER_TAG: ''
     defaults:
       run:
         working-directory: launcher
@@ -294,12 +295,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # A fork's custom build: fixed notes, no pull-request lookup (the fork has none to find).
       - name: Notes
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
-          python3 tools/release_train.py notes --kind launcher --tag "${{ needs.decide.outputs.tag }}" \
-            --head "${{ needs.decide.outputs.head }}" --out notes > /dev/null
+          mkdir -p notes
+          echo "Horizon launcher 0.2.28 Custom" > notes/title.txt
+          printf '%s\n' "Custom build: upstream launcher main plus a fix that lets the game start without a Microsoft account that owns Minecraft. It never replaces itself with an official release." > notes/body.md
           { echo "## $(cat notes/title.txt)"; echo; cat notes/body.md; } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/download-artifact@v4
         with:
