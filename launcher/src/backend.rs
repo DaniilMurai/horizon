@@ -2476,9 +2476,13 @@ pub fn exe_path() -> &'static Path {
     EXE.get_or_init(|| std::env::current_exe().unwrap_or_else(|_| PathBuf::from(LAUNCHER_BINARY)))
 }
 
-/// Development builds and `HORIZON_LAUNCHER_NO_SELF_UPDATE` never replace themselves.
+/// Development builds, builds outside the release pipeline (no `HORIZON_LAUNCHER_TAG`, shown as
+/// "Custom") and `HORIZON_LAUNCHER_NO_SELF_UPDATE` never replace themselves: an official release
+/// would drop what the custom build changed.
 pub fn self_update_allowed() -> bool {
-    !cfg!(debug_assertions) && std::env::var_os("HORIZON_LAUNCHER_NO_SELF_UPDATE").is_none()
+    !cfg!(debug_assertions)
+        && option_env!("HORIZON_LAUNCHER_TAG").is_some_and(|t| !t.is_empty())
+        && std::env::var_os("HORIZON_LAUNCHER_NO_SELF_UPDATE").is_none()
 }
 
 /// The version in `horizon-launcher --version`'s output (`horizon-launcher 0.1.5`).
